@@ -19,10 +19,11 @@ pub fn main() !void {
             try padding.appendNTimes(' ', err.offset);
             std.debug.print(
                 \\Error {} compiling pattern at position {}:
-                \\{s}
+                \\"{s}"
                 \\{s}^
                 \\
             , .{ err.code, err.offset, pattern, padding.items });
+            std.process.exit(1);
         },
     }
     defer re.deinit();
@@ -31,7 +32,7 @@ pub fn main() !void {
     var offset: usize = 0;
 
     while (true) {
-        const res = try re.match(s, offset, 0);
+        const res = try re.match(s, offset, .{});
         switch (res) {
             .ok => |match| {
                 defer ally.destroy(match);

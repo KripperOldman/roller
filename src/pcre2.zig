@@ -55,7 +55,21 @@ pub const CompileResult = union(ResultEnum) {
     fail: *CompileError,
 };
 
-pub const MatchOptions = u32;
+pub const MatchOptions = packed struct(u32) {
+    NOTBOL: bool = false,
+    NOTEOL: bool = false,
+    NOTEMPTY: bool = false,
+    NOTEMPTY_ATSTART: bool = false,
+    PARTIAL_SOFT: bool = false,
+    PARTIAL_HARD: bool = false,
+    _reserved1: u7 = 0,
+    NO_JIT: bool = false,
+    COPY_MATCHED_SUBJECT: bool = false,
+    _reserved2: u14 = 0,
+    ENDANCHORED: bool = false,
+    NO_UTF_CHECK: bool = false,
+    ANCHORED: bool = false,
+};
 pub const Match = struct {
     start: usize,
     end: usize,
@@ -118,7 +132,7 @@ pub const Regex = struct {
     }
 
     pub fn match(self: Regex, string: []const u8, offset: usize, options: ?MatchOptions) !MatchResult {
-        const opts = options orelse 0;
+        const opts = options orelse MatchOptions{};
         const matchData = pcre2.pcre2_match_data_create_8(1, null).?;
         defer pcre2.pcre2_match_data_free_8(matchData);
 
@@ -127,7 +141,7 @@ pub const Regex = struct {
             string.ptr,
             string.len,
             offset,
-            opts,
+            @bitCast(opts),
             matchData,
             null,
         );
@@ -186,7 +200,7 @@ test "match test" {
     defer re.deinit();
 
     const s = "fldkajsabcccccaldkjabc";
-    var res = try re.match(s, 0, 0);
+    var res = try re.match(s, 0, .{});
     switch (res) {
         .ok => |match| {
             defer ally.destroy(match);
@@ -198,7 +212,7 @@ test "match test" {
         .fail => try testing.expect(false),
     }
 
-    res = try re.match(s, 14, 0);
+    res = try re.match(s, 14, .{});
     switch (res) {
         .ok => |match| {
             defer ally.destroy(match);
@@ -210,7 +224,7 @@ test "match test" {
         .fail => try testing.expect(false),
     }
 
-    res = try re.match(s, 22, 0);
+    res = try re.match(s, 22, .{});
     switch (res) {
         .ok => try testing.expect(false),
         .fail => |err| {
