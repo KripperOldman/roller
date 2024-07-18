@@ -23,9 +23,9 @@
     // Once all dependencies are fetched, `zig build` no longer requires
     // internet connectivity.
     .dependencies = .{
-        .regex = .{
-            .url = "https://github.com/tiehuis/zig-regex/archive/7bc0fd777c3b92c51a94531439e5913bda24030c.tar.gz",
-            .hash = "1220b497739b6fd60f627da85862cbd0cec01f3d6b7ddaa923057a7999ecfa138704",
+        .pcre2 = .{
+            .url = "git+https://github.com/PCRE2Project/pcre2#4fa5b8bd206135447f55e7f5f8d9294474051a44",
+            .hash = "1220d2853b359b71cddea07cd55b07bb96d03261ac78cd655ba92928d7a82656502c",
         },
     },
     .paths = .{

@@ -1,25 +1,60 @@
 const std = @import("std");
-const re = @import("regex");
+const pcre2 = @import("pcre2.zig");
+const Regex = pcre2.Regex;
+const color = @import("color.zig");
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const ally = gpa.allocator();
+    var re: Regex = undefined;
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    const pattern = "abc+";
+    switch (try Regex.init(ally, pattern, .{})) {
+        .ok => |regex| {
+            re = regex;
+        },
+        .fail => |err| {
+            var padding = std.ArrayList(u8).init(ally);
+            defer padding.deinit();
+            try padding.appendNTimes(' ', err.offset);
+            std.debug.print(
+                \\Error {} compiling pattern at position {}:
+                \\{s}
+                \\{s}^
+                \\
+            , .{ err.code, err.offset, pattern, padding.items });
+        },
+    }
+    defer re.deinit();
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+    const s = "fldkajsabcccccaldkjabc";
+    var offset: usize = 0;
 
-    try bw.flush(); // don't forget to flush!
+    while (true) {
+        const res = try re.match(s, offset, 0);
+        switch (res) {
+            .ok => |match| {
+                defer ally.destroy(match);
+                defer offset = match.end;
+
+                const writer = std.io.getStdOut().writer();
+                _ = try writer.write(s[0..match.start]);
+                try color.writeColorized(
+                    writer,
+                    @intFromEnum(color.StandardColors.BrightRed),
+                    s[match.start..match.end],
+                );
+                _ = try writer.write(s[match.end..]);
+                try writer.writeByte('\n');
+            },
+            .fail => |err| {
+                std.debug.print("Error: {s}\n", .{@tagName(err)});
+                break;
+            },
+        }
+    }
 }
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
+test {
+    std.testing.refAllDecls(@This());
 }
