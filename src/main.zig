@@ -6,6 +6,10 @@ const root = @import("root.zig");
 const StandardColors = @import("color.zig").StandardColors;
 const clap = @import("clap");
 
+pub const std_options = .{
+    .log_level = .warn,
+};
+
 const params = clap.parseParamsComptime(
     \\-h, --help                      Display this help and exit.
     \\    --usage                     Display usage and exit.
