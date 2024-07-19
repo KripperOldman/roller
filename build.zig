@@ -21,6 +21,12 @@ pub fn build(b: *std.Build) void {
     });
     const pcre2_lib = pcre2_dep.artifact("pcre2-8");
 
+    const clap_dep = b.dependency("clap", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const clap_module = clap_dep.module("clap");
+
     const exe = b.addExecutable(.{
         .name = "roller",
         .root_source_file = b.path("src/main.zig"),
@@ -29,6 +35,7 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.root_module.linkLibrary(pcre2_lib);
+    exe.root_module.addImport("clap", clap_module);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
