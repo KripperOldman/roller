@@ -107,6 +107,26 @@
     "gitignore": {
       "inputs": {
         "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1709087332,
+        "narHash": "sha256-HG2cCnktfHsKV0s4XW83gU3F57gaTljL9KNSuG6bnQs=",
+        "owner": "hercules-ci",
+        "repo": "gitignore.nix",
+        "rev": "637db329424fd7e46cf4185293b9cc8c88c95394",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "gitignore.nix",
+        "type": "github"
+      }
+    },
+    "gitignore_2": {
+      "inputs": {
+        "nixpkgs": [
           "zls-overlay",
           "nixpkgs"
         ]
@@ -188,6 +208,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "gitignore": "gitignore",
         "nixpkgs": "nixpkgs",
         "zig-overlay": "zig-overlay",
         "zls-overlay": "zls-overlay"
@@ -299,7 +320,7 @@
     "zls-overlay": {
       "inputs": {
         "flake-utils": "flake-utils_3",
-        "gitignore": "gitignore",
+        "gitignore": "gitignore_2",
         "langref": "langref",
         "nixpkgs": "nixpkgs_3",
         "zig-overlay": "zig-overlay_2"
