@@ -26,7 +26,7 @@ const params = clap.parseParamsComptime(
     \\    --bright-magenta <pattern>  Pattern to display in bright magenta.
     \\    --bright-cyan    <pattern>  Pattern to display in bright cyan.
     \\    --bright-white   <pattern>  Pattern to display in bright white.
-    \\[file]...
+    \\<file>...
 );
 
 const usage =
