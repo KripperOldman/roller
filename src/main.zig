@@ -78,8 +78,14 @@ pub fn main() !void {
         );
     } else {
         for (res.positionals) |filename| {
-            var file = try std.fs.cwd().openFile(filename, .{});
-            defer file.close();
+            const isStdin = std.mem.eql(u8, filename, "-");
+            var file = if (isStdin)
+                std.io.getStdIn()
+            else
+                try std.fs.cwd().openFile(filename, .{});
+
+            defer if (!isStdin)
+                file.close();
 
             try root.colorizePatterns(
                 ally,
@@ -113,7 +119,9 @@ fn handleHelpAndUsage(args: anytype, exe_arg: []const u8) !void {
 
 fn verifyFilesExist(files: []const []const u8) !void {
     for (files) |file| {
-        try std.fs.cwd().access(file, .{});
+        if (!std.mem.eql(u8, file, "-")) {
+            try std.fs.cwd().access(file, .{});
+        }
     }
 }
 
