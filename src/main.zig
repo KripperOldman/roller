@@ -121,110 +121,43 @@ fn getColorPatterns(allocator: Allocator, args: anytype) ![]root.Color8Pattern {
     var colorPatterns = std.ArrayList(root.Color8Pattern).init(allocator);
     errdefer colorPatterns.deinit();
 
-    if (args.bold) |bold_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.Bold),
-            .pattern = bold_pat,
-        });
-    }
-    if (args.black) |black_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.Black),
-            .pattern = black_pat,
-        });
-    }
-    if (args.red) |red_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.Red),
-            .pattern = red_pat,
-        });
-    }
-    if (args.green) |green_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.Green),
-            .pattern = green_pat,
-        });
-    }
-    if (args.yellow) |yellow_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.Yellow),
-            .pattern = yellow_pat,
-        });
-    }
-    if (args.blue) |blue_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.Blue),
-            .pattern = blue_pat,
-        });
-    }
-    if (args.magenta) |magenta_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.Magenta),
-            .pattern = magenta_pat,
-        });
-    }
-    if (args.cyan) |cyan_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.Cyan),
-            .pattern = cyan_pat,
-        });
-    }
-    if (args.white) |white_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.White),
-            .pattern = white_pat,
-        });
-    }
-    if (args.gray) |gray_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.BrightBlack),
-            .pattern = gray_pat,
-        });
-    }
-    if (args.@"bright-red") |bright_red_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.BrightRed),
-            .pattern = bright_red_pat,
-        });
-    }
-    if (args.@"bright-green") |bright_green_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.BrightGreen),
-            .pattern = bright_green_pat,
-        });
-    }
-    if (args.@"bright-yellow") |bright_yellow_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.BrightYellow),
-            .pattern = bright_yellow_pat,
-        });
-    }
-    if (args.@"bright-blue") |bright_blue_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.BrightBlue),
-            .pattern = bright_blue_pat,
-        });
-    }
-    if (args.@"bright-magenta") |bright_magenta_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.BrightMagenta),
-            .pattern = bright_magenta_pat,
-        });
-    }
-    if (args.@"bright-cyan") |bright_cyan_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.BrightCyan),
-            .pattern = bright_cyan_pat,
-        });
-    }
-    if (args.@"bright-white") |bright_white_pat| {
-        try colorPatterns.append(.{
-            .color = @intFromEnum(StandardColors.BrightWhite),
-            .pattern = bright_white_pat,
-        });
+    inline for (@typeInfo(StandardColors).Enum.fields) |color| {
+        const mapped = comptime mapColorToFlag(@enumFromInt(color.value));
+
+        if (mapped) |tag_name| {
+            if (@field(args, tag_name)) |pat| {
+                try colorPatterns.append(.{
+                    .color = color.value,
+                    .pattern = pat,
+                });
+            }
+        }
     }
 
     return colorPatterns.toOwnedSlice();
+}
+
+fn mapColorToFlag(color: StandardColors) ?[]const u8 {
+    return switch (color) {
+        StandardColors.Bold => "bold",
+        StandardColors.Black => "black",
+        StandardColors.Red => "red",
+        StandardColors.Green => "green",
+        StandardColors.Yellow => "yellow",
+        StandardColors.Blue => "blue",
+        StandardColors.Magenta => "magenta",
+        StandardColors.Cyan => "cyan",
+        StandardColors.White => "white",
+        StandardColors.BrightBlack => "gray",
+        StandardColors.BrightRed => "bright-red",
+        StandardColors.BrightGreen => "bright-green",
+        StandardColors.BrightYellow => "bright-yellow",
+        StandardColors.BrightBlue => "bright-blue",
+        StandardColors.BrightMagenta => "bright-magenta",
+        StandardColors.BrightCyan => "bright-cyan",
+        StandardColors.BrightWhite => "bright-white",
+        else => null,
+    };
 }
 
 test {
