@@ -94,7 +94,11 @@ fn writeWithColors(
 ) !void {
     const lessThanFn = comptime struct {
         fn lessThanFn(_: void, lhs: ColoringData8, rhs: ColoringData8) bool {
-            return std.sort.asc(usize)({}, lhs.start, rhs.start);
+            if (lhs.start == rhs.start) {
+                return (rhs.end - rhs.start) < (lhs.end - lhs.start);
+            } else {
+                return lhs.start < rhs.start;
+            }
         }
     }.lessThanFn;
     std.mem.sort(ColoringData8, colorList, {}, lessThanFn);
@@ -305,6 +309,36 @@ test "fully overlapping patterns test" {
 
     try testing.expectEqualStrings(
         "__\x1b[34m_abcd\x1b[0m12345hello\n",
+        buf.items,
+    );
+}
+
+test "highlight longer match first test" {
+    const ally = std.testing.allocator;
+    var buf = std.ArrayList(u8).init(ally);
+    defer buf.deinit();
+    const writer = buf.writer();
+
+    const str = "abc\n";
+
+    var stream = std.io.fixedBufferStream(str);
+    const reader = stream.reader();
+
+    const colorPatterns1 = [_]Color8Pattern{
+        Color8Pattern{
+            .pattern = "bc",
+            .color = @intFromEnum(color.StandardColors.Red),
+        },
+        Color8Pattern{
+            .pattern = ".",
+            .color = @intFromEnum(color.StandardColors.Black),
+        },
+    };
+
+    try colorizePatterns(ally, reader, writer, &colorPatterns1);
+
+    try testing.expectEqualStrings(
+        "\x1b[30ma\x1b[0m\x1b[31mbc\x1b[0m\n",
         buf.items,
     );
 }
