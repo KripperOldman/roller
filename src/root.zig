@@ -44,9 +44,22 @@ pub fn colorizePatterns(
     var line = std.ArrayList(u8).init(allocator);
     defer line.deinit();
     const lineWriter = line.writer();
+    var endOfStream = false;
 
-    while (reader.streamUntilDelimiter(lineWriter, '\n', null)) {
+    lineLoop: while (!endOfStream) {
         defer line.clearRetainingCapacity();
+
+        reader.streamUntilDelimiter(lineWriter, '\n', null) catch |err| {
+            switch (err) {
+                error.EndOfStream => {
+                    endOfStream = true;
+                    if (line.items.len == 0)
+                        break :lineLoop;
+                },
+                else => return err,
+            }
+        };
+
         const str = line.items;
 
         var colorList = std.ArrayList(ColoringData8).init(allocator);
@@ -79,11 +92,6 @@ pub fn colorizePatterns(
 
         try writeWithColors(bufWriter, colorList.items, str);
         try bw.flush();
-    } else |err| {
-        switch (err) {
-            error.EndOfStream => {},
-            else => return err,
-        }
     }
 }
 
@@ -141,7 +149,7 @@ test "single pattern test" {
     defer buf.deinit();
     const writer = buf.writer();
 
-    const str = "___abcd12345hello\n";
+    const str = "___abcd12345hello";
     var stream = std.io.fixedBufferStream(str);
     const reader = stream.reader();
 
@@ -166,7 +174,7 @@ test "multi pattern test" {
     defer buf.deinit();
     const writer = buf.writer();
 
-    const str = "___abcd12345hello\n";
+    const str = "___abcd12345hello";
     var stream = std.io.fixedBufferStream(str);
     const reader = stream.reader();
 
@@ -198,7 +206,6 @@ test "multi line test" {
     const str =
         \\___abcd12345hello
         \\123kljl21lj
-        \\
     ;
     var stream = std.io.fixedBufferStream(str);
     const reader = stream.reader();
@@ -229,7 +236,7 @@ test "overlapping patterns test" {
     defer buf.deinit();
     const writer = buf.writer();
 
-    const str = "___abcd12345hello\n";
+    const str = "___abcd12345hello";
 
     var stream = std.io.fixedBufferStream(str);
     const reader = stream.reader();
@@ -259,7 +266,7 @@ test "overlapping patterns out of order test" {
     defer buf.deinit();
     const writer = buf.writer();
 
-    const str = "___abcd12345hello\n";
+    const str = "___abcd12345hello";
 
     var stream = std.io.fixedBufferStream(str);
     const reader = stream.reader();
@@ -289,7 +296,7 @@ test "fully overlapping patterns test" {
     defer buf.deinit();
     const writer = buf.writer();
 
-    const str = "___abcd12345hello\n";
+    const str = "___abcd12345hello";
 
     var stream = std.io.fixedBufferStream(str);
     const reader = stream.reader();
@@ -319,7 +326,7 @@ test "highlight longer match first test" {
     defer buf.deinit();
     const writer = buf.writer();
 
-    const str = "abc\n";
+    const str = "abc";
 
     var stream = std.io.fixedBufferStream(str);
     const reader = stream.reader();
