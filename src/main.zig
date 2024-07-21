@@ -34,11 +34,20 @@ const params = clap.parseParamsComptime(
 );
 
 const usage =
+    \\Usage: {0?s} [--color <pattern>]... [files]...
     \\Colorize text based on regex patterns.
+    \\
     \\With no file, or when file is -, read standard input.
     \\
-    \\Usage: {?s} [--color <pattern>] [files]
     \\
+;
+
+const examples =
+    \\Examples:
+    \\  {0?s} --red='[0-9]' f - g
+    \\      Output contents of f, then stdin, then g, with numbers in red.
+    \\  {0?s} --red='[a-zA-Z]' --blue='[0-9]'
+    \\      Copy stdin to stdout, with letters in red and numbers in blue.
     \\
 ;
 
@@ -109,10 +118,14 @@ fn handleHelpAndUsage(args: anytype, exe_arg: []const u8) !void {
             .description_on_new_line = false,
             .spacing_between_parameters = 0,
         });
+
+        try stderr.writeByte('\n');
+        try stderr.print(examples, .{exe_arg});
         std.process.exit(0);
     } else if (args.usage != 0) {
         const stderr = std.io.getStdErr().writer();
         try stderr.print(usage, .{exe_arg});
+        try stderr.print(examples, .{exe_arg});
         std.process.exit(0);
     }
 }
