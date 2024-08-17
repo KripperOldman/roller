@@ -94,7 +94,9 @@ pub fn build(b: *std.Build) !void {
     test_step.dependOn(&run_exe_unit_tests.step);
 
     const build_all_step = b.step("all", "Build for all targets");
-    for (targets) |t| {
+    inline for (targets) |t| {
+        const triple = try t.zigTriple(b.allocator);
+
         const target_pcre2_dep = b.dependency("pcre2", .{
             .target = b.resolveTargetQuery(t),
             .optimize = optimize,
@@ -108,7 +110,11 @@ pub fn build(b: *std.Build) !void {
         const target_clap_module = target_clap_dep.module("clap");
 
         const target_exe = b.addExecutable(.{
-            .name = "roller",
+            .name = try std.fmt.allocPrint(
+                b.allocator,
+                "{s}-{s}",
+                .{ "roller", triple },
+            ),
             .root_source_file = b.path("src/main.zig"),
             .target = b.resolveTargetQuery(t),
             .optimize = .ReleaseSafe,
@@ -120,7 +126,7 @@ pub fn build(b: *std.Build) !void {
         const target_output = b.addInstallArtifact(target_exe, .{
             .dest_dir = .{
                 .override = .{
-                    .custom = try t.zigTriple(b.allocator),
+                    .custom = "release",
                 },
             },
         });
